@@ -16,3 +16,11 @@ class TestDigester(unittest.TestCase):
         # unicode tags
         self.assertEqual(hashtags("Latin: #bênção Japanese: #祝福"),
                          {"bênção", "祝福"})
+        # snake case
+        self.assertEqual(hashtags("something #_before #in_the_middle #after_"),
+                         {"_before", "in_the_middle", "after_"})
+        # strange valid cases
+        self.assertEqual(hashtags("#tag1.#tag2 #tag3$#tag4"),
+                         {"tag1", "tag2", "tag3", "tag4"})
+        # no subtags
+        self.assertEqual(hashtags("#dont#like #sub#tags"), set())
