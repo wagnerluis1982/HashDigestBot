@@ -1,4 +1,5 @@
 import re
+from typing import Iterable
 
 HASHTAG_RE = re.compile(
     r"(?:^|\W+)"    # Ignore begin or non-words before '#'.
@@ -7,5 +8,5 @@ HASHTAG_RE = re.compile(
 )
 
 
-def hashtags(text):
+def hashtags(text: str) -> Iterable[str]:
     return set(HASHTAG_RE.findall(text))
