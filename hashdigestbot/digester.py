@@ -1,5 +1,5 @@
 import re
-from typing import Sequence, FrozenSet
+from typing import cast, Sequence, Tuple, List, Set, FrozenSet, Dict
 
 HASHTAG_RE = re.compile(
     r"(?:^|\W+)"    # Ignore begin or non-words before '#'.
@@ -19,10 +19,37 @@ class HashMessage:
         self.reply_to = reply_to
 
 
+class TagMarker:
+    def __init__(self):
+        # The following is a dict mapped as
+        #   tag -> (forms, messages)
+        # where
+        # - tag: unique form of the tag name
+        # - forms: are variations of a tag, e.g. #lovepython and #LovePython
+        # - messages: list of HashMessage objects associated to the tag
+        self._tag2msgs = cast(Dict[str, Tuple[Set[str], List[HashMessage]]], {})
+
+    def mark(self, message, tags):
+        for tag in tags:
+            key = tag.lower()
+            if key not in self._tag2msgs:
+                self._tag2msgs[key] = ({tag}, [message])
+            else:
+                forms, messages = self._tag2msgs[key]
+                forms.add(tag)
+                messages.append(message)
+
+    def get_messages(self, tag):
+        key = tag.lower()
+        subject = self._tag2msgs.get(key)
+        if subject:
+            return tuple(subject[1])
+        return ()
+
+
 class Digester:
     def __init__(self):
-        # Dict[str, Tuple[Set[str], List[HashMessage]]]
-        self._subjects = {}
+        self._marker = TagMarker()
 
     def feed(self, message: HashMessage) -> bool:
         """Give a message to process tags
@@ -34,22 +61,9 @@ class Digester:
             bool: Indicate if the message was added to the digest
         """
         tags = hashtags(message.text)
-        for tag in tags:
-            key = tag.lower()
-            if key not in self._subjects:
-                self._subjects[key] = ({tag}, [message])
-            else:
-                subject = self._subjects[key]
-                subject[0].add(tag)
-                subject[1].append(message)
-
+        self._marker.mark(message, tags)
         return bool(tags)
 
     def get_messages(self, tag: str) -> Sequence[HashMessage]:
         """Sequence of messages related to this tag"""
-        key = tag.lower()
-        subject = self._subjects.get(key)
-        if subject:
-            return tuple(subject[1])
-
-        return ()
+        return self._marker.get_messages(tag)
