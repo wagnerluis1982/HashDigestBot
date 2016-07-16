@@ -19,7 +19,7 @@ class HashMessage:
         self.reply_to = reply_to
 
 
-class TagMarker:
+class Digester:
     def __init__(self):
         # The following is a dict mapped as
         #   tag -> (forms, messages)
@@ -34,6 +34,26 @@ class TagMarker:
         # where
         # - msg_id: is the unique id of the message.
         self._msg2tags = cast(Dict[int, Set[str]], {})
+
+    def feed(self, message: HashMessage) -> bool:
+        """Give a message to process tags
+
+        The message will be added to the digest if has tags or is a reply to a
+        previous message with tags.
+
+        Returns:
+            bool: Indicate if the message was added to the digest
+        """
+        # Extract tags from the message
+        tags = hashtags(message.text)
+        # If no tags found, check if message is a reply to a previous tagged message
+        if not tags and message.reply_to:
+            tags = self.get_tags(message)
+        # Verify if I have tags and mark the message
+        if tags:
+            self.mark(message, tags)
+            return True
+        return False
 
     def mark(self, message: HashMessage, tags: Iterable[str]):
         # get the association of this message to tags for later use
@@ -58,6 +78,7 @@ class TagMarker:
         return ()
 
     def get_messages(self, tag: str) -> Sequence[HashMessage]:
+        """Sequence of messages related to this tag"""
         key = self.generate_key(tag)
         taggish = self._tag2msgs.get(key)
         if taggish:
@@ -68,32 +89,3 @@ class TagMarker:
     def generate_key(tag: str) -> str:
         # Generate a key for this tag
         return tag.lower()
-
-
-class Digester:
-    def __init__(self):
-        self._marker = TagMarker()
-
-    def feed(self, message: HashMessage) -> bool:
-        """Give a message to process tags
-
-        The message will be added to the digest if has tags or is a reply to a
-        previous message with tags.
-
-        Returns:
-            bool: Indicate if the message was added to the digest
-        """
-        # Extract tags from the message
-        tags = hashtags(message.text)
-        # If no tags found, check if message is a reply to a previous tagged message
-        if not tags and message.reply_to:
-            tags = self._marker.get_tags(message)
-        # Verify if I have tags and mark the message
-        if tags:
-            self._marker.mark(message, tags)
-            return True
-        return False
-
-    def get_messages(self, tag: str) -> Sequence[HashMessage]:
-        """Sequence of messages related to this tag"""
-        return self._marker.get_messages(tag)
