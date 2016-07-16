@@ -40,8 +40,7 @@ class TagMarker:
         backref = self._msg2tags[message.id] = set()
 
         for tag in tags:
-            # generate a key for this tag
-            key = tag.lower()
+            key = self.generate_key(tag)
             # associate the message to this tag
             if key not in self._tag2msgs:
                 self._tag2msgs[key] = ({tag}, [message])
@@ -53,11 +52,16 @@ class TagMarker:
             backref.add(key)
 
     def get_messages(self, tag):
-        key = tag.lower()
-        subject = self._tag2msgs.get(key)
-        if subject:
-            return tuple(subject[1])
+        key = self.generate_key(tag)
+        taggish = self._tag2msgs.get(key)
+        if taggish:
+            return tuple(taggish[1])
         return ()
+
+    @staticmethod
+    def generate_key(tag):
+        # Generate a key for this tag
+        return tag.lower()
 
 
 class Digester:
