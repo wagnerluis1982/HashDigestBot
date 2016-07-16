@@ -41,13 +41,14 @@ class TagMarker:
 
         for tag in tags:
             key = self.generate_key(tag)
-            # associate the message to this tag
             if key not in self._tag2msgs:
-                self._tag2msgs[key] = ({tag}, [message])
-            else:
-                forms, messages = self._tag2msgs[key]
-                forms.add(tag)
-                messages.append(message)
+                self._tag2msgs[key] = (set(), list())
+
+            # associate the message to this tag
+            forms, messages = self._tag2msgs[key]
+            forms.add(tag)
+            messages.append(message)
+
             # associate this tag to the message
             backref.add(key)
 
