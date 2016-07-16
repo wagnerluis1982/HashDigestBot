@@ -46,16 +46,17 @@ class Digester:
         """
         # Extract tags from the message
         tags = hashtags(message.text)
+        is_variations = bool(tags)
         # If no tags found, check if message is a reply to a previous tagged message
         if not tags and message.reply_to:
             tags = self.get_tags(message)
         # Verify if I have tags and mark the message
         if tags:
-            self._mark(message, tags)
+            self._mark(message, tags, is_variations)
             return True
         return False
 
-    def _mark(self, message: HashMessage, tags: Iterable[str]):
+    def _mark(self, message: HashMessage, tags: Iterable[str], is_variations=True):
         # get the association of this message to tags for later use
         backref = self._msg2tags[message.id] = set()
 
@@ -66,7 +67,8 @@ class Digester:
 
             # associate the message to this tag
             forms, messages = self._tag2msgs[key]
-            forms.add(tag)
+            if is_variations:   # The tags passed may not be the ones extracted, but got from get_tags() method.
+                forms.add(tag)  # In that case the tags could not be a real variation.
             messages.append(message)
 
             # associate this tag to the message

@@ -24,7 +24,6 @@ class TestDigester(unittest.TestCase):
         self.assertTrue(digester.feed(messages[2]))
         self.assertEqual(digester.get_messages("superman"), (messages[0], messages[2]))
 
-    @unittest.expectedFailure
     def test_digest(self):
         digester = Digester()
         flow = self.flow
@@ -36,6 +35,9 @@ class TestDigester(unittest.TestCase):
         self.assertEqual(tag, "superman")
         self.assertCountEqual(forms, ["Superman"])
         self.assertSequenceEqual(messages, [flow[0], flow[2]])
+
+        with self.assertRaises(StopIteration):
+            next(digest)
 
     def test_hashtags(self):
         # one tag
