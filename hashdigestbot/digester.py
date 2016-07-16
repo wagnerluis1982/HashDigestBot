@@ -1,5 +1,5 @@
 import re
-from typing import cast, Sequence, Tuple, List, Set, FrozenSet, Dict
+from typing import cast, Sequence, Iterable, Tuple, List, Set, FrozenSet, Dict
 
 HASHTAG_RE = re.compile(
     r"(?:^|\W+)"    # Ignore begin or non-words before '#'.
@@ -35,7 +35,7 @@ class TagMarker:
         # - msg_id: is the unique id of the message.
         self._msg2tags = cast(Dict[int, Set[str]], {})
 
-    def mark(self, message, tags):
+    def mark(self, message: HashMessage, tags: Iterable[str]):
         # get the association of this message to tags for later use
         backref = self._msg2tags[message.id] = set()
 
@@ -52,12 +52,12 @@ class TagMarker:
             # associate this tag to the message
             backref.add(key)
 
-    def get_tags(self, message):
+    def get_tags(self, message: HashMessage) -> Sequence[str]:
         if message.reply_to in self._msg2tags:
             return tuple(self._msg2tags[message.reply_to])
         return ()
 
-    def get_messages(self, tag):
+    def get_messages(self, tag: str) -> Sequence[HashMessage]:
         key = self.generate_key(tag)
         taggish = self._tag2msgs.get(key)
         if taggish:
@@ -65,7 +65,7 @@ class TagMarker:
         return ()
 
     @staticmethod
-    def generate_key(tag):
+    def generate_key(tag: str) -> str:
         # Generate a key for this tag
         return tag.lower()
 
