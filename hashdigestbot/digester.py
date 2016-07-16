@@ -1,5 +1,5 @@
 import re
-from typing import cast, Sequence, Iterable, Tuple, List, Set, FrozenSet, Dict
+from typing import cast, Sequence, Iterable, Tuple, List, Set, FrozenSet, Dict, Iterator
 
 HASHTAG_RE = re.compile(
     r"(?:^|\W+)"    # Ignore begin or non-words before '#'.
@@ -71,6 +71,15 @@ class Digester:
 
             # associate this tag to the message
             backref.add(key)
+
+    def digest(self) -> Iterator[Tuple[str, Sequence[str], Sequence[HashMessage]]]:
+        """The digest
+
+        Returns:
+            A generator over the digest giving tuples as ``(tag, forms, messages)``
+        """
+        for tag, (forms, messages) in self._tag2msgs.items():
+            yield tag, tuple(forms), tuple(messages)
 
     def get_tags(self, message: HashMessage) -> Sequence[str]:
         """Sequence of tags related to a message"""
