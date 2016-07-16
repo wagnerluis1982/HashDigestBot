@@ -20,7 +20,7 @@ class TestDigester(unittest.TestCase):
         self.assertEqual(digester.get_messages("superman"), messages[0:1])
 
         self.assertTrue(digester.feed(messages[2]))
-        self.assertEqual(digester.get_messages("superman"), [messages[0], messages[2]])
+        self.assertEqual(digester.get_messages("superman"), (messages[0], messages[2]))
 
     def test_hashtags(self):
         # one tag

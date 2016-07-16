@@ -52,6 +52,11 @@ class TagMarker:
             # associate this tag to the message
             backref.add(key)
 
+    def get_tags(self, message):
+        if message.reply_to in self._msg2tags:
+            return tuple(self._msg2tags[message.reply_to])
+        return ()
+
     def get_messages(self, tag):
         key = self.generate_key(tag)
         taggish = self._tag2msgs.get(key)
@@ -78,9 +83,16 @@ class Digester:
         Returns:
             bool: Indicate if the message was added to the digest
         """
+        # Extract tags from the message
         tags = hashtags(message.text)
-        self._marker.mark(message, tags)
-        return bool(tags)
+        # If no tags found, check if message is a reply to a previous tagged message
+        if not tags and message.reply_to:
+            tags = self._marker.get_tags(message)
+        # Verify if I have tags and mark the message
+        if tags:
+            self._marker.mark(message, tags)
+            return True
+        return False
 
     def get_messages(self, tag: str) -> Sequence[HashMessage]:
         """Sequence of messages related to this tag"""
