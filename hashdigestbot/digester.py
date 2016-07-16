@@ -29,15 +29,28 @@ class TagMarker:
         # - messages: list of HashMessage objects associated to the tag
         self._tag2msgs = cast(Dict[str, Tuple[Set[str], List[HashMessage]]], {})
 
+        # Here we have the back references, that is a dict mapped as
+        #   msg_id -> [tag, ...]
+        # where
+        # - msg_id: is the unique id of the message.
+        self._msg2tags = cast(Dict[int, Set[str]], {})
+
     def mark(self, message, tags):
+        # get the association of this message to tags for later use
+        backref = self._msg2tags[message.id] = set()
+
         for tag in tags:
+            # generate a key for this tag
             key = tag.lower()
+            # associate the message to this tag
             if key not in self._tag2msgs:
                 self._tag2msgs[key] = ({tag}, [message])
             else:
                 forms, messages = self._tag2msgs[key]
                 forms.add(tag)
                 messages.append(message)
+            # associate this tag to the message
+            backref.add(key)
 
     def get_messages(self, tag):
         key = tag.lower()
