@@ -21,7 +21,7 @@ class HashMessage:
 
 class Digester:
     def __init__(self):
-        # The following is a dict mapped as
+        # The following is a dict to store the relation of tag to messages mapped as
         #   tag -> (forms, messages)
         # where
         # - tag: unique form of the tag name
@@ -29,7 +29,7 @@ class Digester:
         # - messages: list of HashMessage objects associated to the tag
         self._tag2msgs = cast(Dict[str, Tuple[Set[str], List[HashMessage]]], {})
 
-        # Here we have the back references, that is a dict mapped as
+        # Here we have the back references, i.e message to tags, that is a dict mapped as
         #   msg_id -> [tag, ...]
         # where
         # - msg_id: is the unique id of the message.
@@ -51,11 +51,11 @@ class Digester:
             tags = self.get_tags(message)
         # Verify if I have tags and mark the message
         if tags:
-            self.mark(message, tags)
+            self._mark(message, tags)
             return True
         return False
 
-    def mark(self, message: HashMessage, tags: Iterable[str]):
+    def _mark(self, message: HashMessage, tags: Iterable[str]):
         # get the association of this message to tags for later use
         backref = self._msg2tags[message.id] = set()
 
@@ -73,12 +73,13 @@ class Digester:
             backref.add(key)
 
     def get_tags(self, message: HashMessage) -> Sequence[str]:
+        """Sequence of tags related to a message"""
         if message.reply_to in self._msg2tags:
             return tuple(self._msg2tags[message.reply_to])
         return ()
 
     def get_messages(self, tag: str) -> Sequence[HashMessage]:
-        """Sequence of messages related to this tag"""
+        """Sequence of messages related to a tag"""
         key = self.generate_key(tag)
         taggish = self._tag2msgs.get(key)
         if taggish:
@@ -87,5 +88,5 @@ class Digester:
 
     @staticmethod
     def generate_key(tag: str) -> str:
-        # Generate a key for this tag
+        """Generate a key for a tag"""
         return tag.lower()
