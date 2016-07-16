@@ -46,14 +46,17 @@ class Digester:
         """
         # Extract tags from the message
         tags = hashtags(message.text)
-        is_variations = bool(tags)
-        # If no tags found, check if message is a reply to a previous tagged message
-        if not tags and message.reply_to:
-            tags = self.get_tags(message)
-        # Verify if I have tags and mark the message
+        # Tags found in the message? So, mark them and return.
         if tags:
-            self._mark(message, tags, is_variations)
+            self._mark(message, tags)
             return True
+        # Otherwise, check if message is a reply to a previous tagged message.
+        # In that case, we mark them, but asking for don't register variations.
+        elif message.reply_to:
+            tags = self.get_tags(message)
+            if tags:
+                self._mark(message, tags, is_variations=False)
+                return True
         return False
 
     def _mark(self, message: HashMessage, tags: Iterable[str], is_variations=True):
