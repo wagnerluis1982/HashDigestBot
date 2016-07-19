@@ -1,5 +1,7 @@
 import re
-from typing import cast, Sequence, Iterable, Tuple, List, Set, FrozenSet, Dict, Iterator
+from typing import cast, Sequence, Iterable, Tuple, List, Set, FrozenSet, Dict, Iterator, Union
+
+import telegram
 
 HASHTAG_RE = re.compile(
     r"(?:^|\W+)"    # Ignore begin or non-words before '#'.
@@ -35,7 +37,7 @@ class Digester:
         # - msg_id: is the unique id of the message.
         self._msg2tags = cast(Dict[int, Set[str]], {})
 
-    def feed(self, message: HashMessage) -> bool:
+    def feed(self, message: Union[HashMessage, telegram.Message]) -> bool:
         """Give a message to process tags
 
         The message will be added to the digest if has tags or is a reply to a
@@ -44,6 +46,14 @@ class Digester:
         Returns:
             bool: Indicate if the message was added to the digest
         """
+        # Normalize the type
+        if isinstance(message, telegram.Message):
+            reply_msgid = message.reply_to_message.id if message.reply_to_message else None
+            message = HashMessage(
+                id=message.message_id,
+                text=message.text,
+                reply_to=reply_msgid,
+            )
         # Extract tags from the message
         tags = hashtags(message.text)
         # Tags found in the message? So, mark them and return.
