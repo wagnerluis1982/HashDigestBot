@@ -15,9 +15,10 @@ def hashtags(text: str) -> FrozenSet[str]:
 
 
 class HashMessage:
-    def __init__(self, id: int, text: str, reply_to: int = None):
+    def __init__(self, id: int, text: str, chat_id: int, reply_to: int = None):
         self.id = id
         self.text = text
+        self.chat_id = chat_id
         self.reply_to = reply_to
 
 
@@ -52,6 +53,7 @@ class Digester:
             message = HashMessage(
                 id=message.message_id,
                 text=message.text,
+                chat_id=message.chat_id,
                 reply_to=reply_msgid,
             )
         # Extract tags from the message

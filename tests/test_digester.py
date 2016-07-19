@@ -6,9 +6,9 @@ from hashdigestbot.digester import hashtags, HashMessage, Digester
 class TestDigester(unittest.TestCase):
     flow = (
         # These messages should be fed?
-        HashMessage(1938, "Did you see #Superman?"),     # yes: message with hashtag
-        HashMessage(1939, "I am an useless message"),    # no: without HT or a reply
-        HashMessage(1940, "Yes, I saw", reply_to=1938),  # yes: replying a message with HT
+        HashMessage(1938, "Did you see #Superman?", 1),     # yes: message with hashtag
+        HashMessage(1939, "I am an useless message", 1),    # no: without HT or a reply
+        HashMessage(1940, "Yes, I saw", 1, reply_to=1938),  # yes: replying a message with HT
     )
 
     def test_feed(self):
