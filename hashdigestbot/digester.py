@@ -53,7 +53,7 @@ class Digester:
         # Otherwise, check if message is a reply to a previous tagged message.
         # In that case, we mark them, but asking for don't register variations.
         elif message.reply_to:
-            tags = self.get_tags(message)
+            tags = self.get_tags(message.reply_to)
             if tags:
                 self._mark(message, tags, is_variations=False)
                 return True
@@ -86,10 +86,10 @@ class Digester:
         for tag, (forms, messages) in self._tag2msgs.items():
             yield tag, tuple(forms), tuple(messages)
 
-    def get_tags(self, message: HashMessage) -> Sequence[str]:
+    def get_tags(self, message_id: int) -> Sequence[str]:
         """Sequence of tags related to a message"""
-        if message.reply_to in self._msg2tags:
-            return tuple(self._msg2tags[message.reply_to])
+        if message_id in self._msg2tags:
+            return tuple(self._msg2tags[message_id])
         return ()
 
     def get_messages(self, tag: str) -> Sequence[HashMessage]:
