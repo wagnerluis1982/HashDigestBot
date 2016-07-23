@@ -61,7 +61,7 @@ class Database:
     def is_connected(self):
         return bool(self.session)
 
-    def add_message(self, message: HashMessage, tag_or_name: Union[str, HashTag], is_variations=True):
+    def add_message(self, message: HashMessage, tag_or_name: Union[str, HashTag]):
         session = self.session
         with session.begin():
             if isinstance(tag_or_name, str):
@@ -70,22 +70,18 @@ class Database:
                 q = session.query(HashTag).filter_by(id=tag_id)
                 if not self._exists(q):
                     tag = HashTag(id=tag_id, forms={tag_or_name})
+                # Or fetch tag and add a possible new form
                 else:
                     tag = q.one()
+                    tag.forms.add(tag_or_name)
 
             # When we have a HashTag instance, means it came from database.
+            # Only alias is made. No tag forms is added here.
             else:
                 tag = tag_or_name
 
-            # The tag passed may not be the one extracted, but got from get_tag() method.
-            # In that case the tag could not be a real variation...
-            if is_variations:
-                tag.forms.add(tag_or_name)
-
-            # Associate the message to this tag
+            # Add the message associated to the tag
             message.tag = tag
-
-            # Add message to the database
             session.add(message)
 
     def get_tag(self, message_id: int) -> HashTag:

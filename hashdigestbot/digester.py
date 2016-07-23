@@ -50,7 +50,7 @@ class Digester:
         elif message.reply_to:
             tag_obj = self.db.get_tag(message.reply_to)
             if tag_obj:
-                self.db.add_message(message, tag_obj, is_variations=False)
+                self.db.add_message(message, tag_obj)
                 return True
         return False
 
