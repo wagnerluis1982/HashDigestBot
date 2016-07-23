@@ -27,6 +27,22 @@ class HashTag(Base):
         return "HashTag(%s)" % self.id
 
 
+class HashUser(Base):
+    __tablename__ = 'users'
+
+    def __init__(self, id, friendly_name, username):
+        self.id = id
+        self.friendly_name = friendly_name
+        self.username = username
+
+    id = PrimaryKey(Integer)
+    friendly_name = Required(String)
+    username = Required(String)
+
+    def __repr__(self):
+        return "HashUser(%s)" % self.friendly_name
+
+
 class HashMessage(Base):
     __tablename__ = 'messages'
 
@@ -41,8 +57,12 @@ class HashMessage(Base):
     chat_id = Required(Integer)
     reply_to = Optional(Integer)
 
+    # foreign keys
     tag_id = Required(ForeignKey(HashTag.id))
+    user_id = Required(ForeignKey(HashUser.id))
+    # relationships
     tag = relationship(HashTag, back_populates="messages")
+    user = relationship(HashUser)
 
     def __repr__(self):
         return "HashMessage(%d)" % self.id
