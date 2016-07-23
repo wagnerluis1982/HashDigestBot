@@ -1,7 +1,7 @@
 from functools import partial
-from typing import Iterable, Sequence
+from typing import Sequence
 
-from sqlalchemy import create_engine, Table, Column, Integer, String, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -16,20 +16,13 @@ Optional = Column
 Base = declarative_base()
 
 
-tags2messages = \
-    Table('tags_messages', Base.metadata,
-          Column('tag_id', ForeignKey('tags.id'), primary_key=True),
-          Column('message_id', ForeignKey('messages.id'), primary_key=True))
-
-
 class HashTag(Base):
     __tablename__ = 'tags'
 
     id = PrimaryKey(String)
     forms = Required(ShallowSet)
 
-    messages = relationship("HashMessage", secondary=tags2messages,
-                            back_populates="tags")
+    messages = relationship("HashMessage", back_populates="tag")
 
     def __repr__(self):
         return "HashTag(%s)" % self.id
@@ -49,8 +42,8 @@ class HashMessage(Base):
     chat_id = Required(Integer)
     reply_to = Optional(Integer)
 
-    tags = relationship("HashTag", secondary=tags2messages,
-                        back_populates="messages")
+    tag_id = Required(ForeignKey(HashTag.id))
+    tag = relationship("HashTag", back_populates="messages")
 
     def __repr__(self):
         return "HashMessage(%d)" % self.id
@@ -68,36 +61,39 @@ class Database:
     def is_connected(self):
         return bool(self.session)
 
-    def add_message(self, message: HashMessage, tag_names: Iterable[str], is_variations=True):
+    def add_message(self, message: HashMessage, tag_name: str, is_variations=True):
         session = self.session
         with session.begin():
-            # Associate all the tags to the new message
+            # Add a tag entry if necessary
+            tag_id = self.generate_tag_id(tag_name)
+            q = session.query(HashTag).filter_by(id=tag_id)
+            if not self._exists(q):
+                tag = HashTag(id=tag_id, forms={tag_name})
+            else:
+                tag = q.one()
+
+            # The tag passed may not be the one extracted, but got from get_tag() method.
+            # In that case the tag could not be a real variation...
+            if is_variations:
+                tag.forms.add(tag_name)
+
+            # Associate the message to this tag
+            message.tag = tag
+
+            # Add message to the database
             session.add(message)
-            for name in tag_names:
-                # Add a tag entry if necessary
-                tag_id = self.generate_tag_id(name)
-                q = session.query(HashTag).filter_by(id=tag_id)
-                if not self._exists(q):
-                    tag = HashTag(id=tag_id, forms=set(tag_names))
-                else:
-                    tag = q.one()
 
-                # The tags passed may not be the ones extracted, but got from get_tags() method.
-                # In that case the tags could not be a real variation...
-                if is_variations:
-                    tag.forms = tag.forms.union(tag_names)
-
-                # Associate the message to this tag
-                message.tags.append(tag)
-
-    def get_tags(self, message_id: int = None) -> Sequence[str]:
-        """Sequence of tags related to a message"""
-        message = self.session.query(HashMessage).filter_by(id=message_id).one()
-        return tuple(t.id for t in message.tags)
+    def get_tag(self, message_id: int = None) -> str:
+        """Tag related to a message"""
+        tag = self.session.query(HashTag).\
+            join(HashMessage).\
+            filter_by(id=message_id).one()
+        return tag.id
 
     def get_messages(self, tag_id: str) -> Sequence[HashMessage]:
         """Sequence of messages related to a tag"""
-        tag = self.session.query(HashTag).filter_by(id=tag_id).one()
+        tag = self.session.query(HashTag).\
+            filter_by(id=tag_id).one()
         return tuple(tag.messages)
 
     def get_chat_tags(self, chat_id):

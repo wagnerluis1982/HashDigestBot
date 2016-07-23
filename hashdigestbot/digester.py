@@ -43,14 +43,14 @@ class Digester:
         tag = extract_hashtag(message.text)
         # A tag was found in the message? So, mark them and return.
         if tag:
-            self.db.add_message(message, {tag})
+            self.db.add_message(message, tag)
             return True
         # Otherwise, check if message is a reply to a previous tagged message.
         # In that case, we mark them, but asking for don't register variations.
         elif message.reply_to:
-            tags = self.db.get_tags(message.reply_to)
-            if tags:
-                self.db.add_message(message, tags, is_variations=False)
+            tag = self.db.get_tag(message.reply_to)
+            if tag:
+                self.db.add_message(message, tag, is_variations=False)
                 return True
         return False
 
