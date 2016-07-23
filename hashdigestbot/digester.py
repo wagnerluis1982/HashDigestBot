@@ -1,5 +1,5 @@
 import re
-from typing import Sequence, Tuple, FrozenSet, Iterator, Union
+from typing import Iterator, Union
 
 import telegram
 
@@ -12,8 +12,9 @@ HASHTAG_RE = re.compile(
 )
 
 
-def hashtags(text: str) -> FrozenSet[str]:
-    return frozenset(HASHTAG_RE.findall(text))
+def extract_hashtag(text: str) -> str:
+    search = HASHTAG_RE.search(text)
+    return search.group(1) if search else None
 
 
 class Digester:
@@ -21,10 +22,10 @@ class Digester:
         self.db = connect("sqlite:///")
 
     def feed(self, message: Union[HashMessage, telegram.Message]) -> bool:
-        """Give a message to process tags
+        """Give a message to search for a tag
 
-        The message will be added to the digest if has tags or is a reply to a
-        previous message with tags.
+        The message will be added to the digest if has a tag or is a reply to a
+        previous message with tag.
 
         Returns:
             bool: Indicate if the message was added to the digest
@@ -38,11 +39,11 @@ class Digester:
                 chat_id=message.chat_id,
                 reply_to=reply_msgid,
             )
-        # Extract tags from the message
-        tags = hashtags(message.text)
-        # Tags found in the message? So, mark them and return.
-        if tags:
-            self.db.add_message(message, tags)
+        # Extract tag from the message
+        tag = extract_hashtag(message.text)
+        # A tag was found in the message? So, mark them and return.
+        if tag:
+            self.db.add_message(message, {tag})
             return True
         # Otherwise, check if message is a reply to a previous tagged message.
         # In that case, we mark them, but asking for don't register variations.

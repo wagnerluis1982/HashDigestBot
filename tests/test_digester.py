@@ -1,6 +1,6 @@
 import unittest
 
-from hashdigestbot.digester import hashtags, HashMessage, Digester
+from hashdigestbot.digester import extract_hashtag, HashMessage, Digester
 from hashdigestbot.model.database import Base
 
 
@@ -67,23 +67,25 @@ class TestDigester(unittest.TestCase):
         with self.assertRaises(StopIteration):
             next(digest)
 
-    def test_hashtags(self):
+    def test_extract_hashtag(self):
         # one tag
-        self.assertEqual(hashtags("I #love GDG"), {"love"})
+        self.assertEqual(extract_hashtag("I #love GDG"), "love")
+
         # several tags
-        self.assertEqual(hashtags("#first #second #third"),
-                         {"first", "second", "third"})
+        self.assertEqual(extract_hashtag("#first #second #third"), "first")
+
         # when characters before and after
-        self.assertEqual(hashtags("no#first yes: ?#second, no: 9#third yes: #fourth:content"),
-                         {"second", "fourth"})
+        self.assertEqual(extract_hashtag("no#first yes: ?#second"), "second")
+        self.assertEqual(extract_hashtag("no: 9#first yes: #second:content"), "second")
+
         # unicode tags
-        self.assertEqual(hashtags("Latin: #bênção Japanese: #祝福"),
-                         {"bênção", "祝福"})
+        self.assertEqual(extract_hashtag("Latin: #bênção"), "bênção")
+        self.assertEqual(extract_hashtag("Japanese: #祝福"), "祝福")
+
         # snake case
-        self.assertEqual(hashtags("something #_before #in_the_middle #after_"),
-                         {"_before", "in_the_middle", "after_"})
-        # strange valid cases
-        self.assertEqual(hashtags("#tag1.#tag2 #tag3$#tag4"),
-                         {"tag1", "tag2", "tag3", "tag4"})
+        self.assertEqual(extract_hashtag("#_before"), "_before")
+        self.assertEqual(extract_hashtag("#in_the_middle"), "in_the_middle")
+        self.assertEqual(extract_hashtag("#after_"), "after_")
+
         # no subtags
-        self.assertEqual(hashtags("#dont#like #sub#tags"), set())
+        self.assertEqual(extract_hashtag("#dont#like #sub#tags"), None)
