@@ -47,7 +47,7 @@ class TestDigester(unittest.TestCase):
         digest = digester.digest(1)
         tag = next(digest)
         self.assertEqual(tag.id, "superman")
-        self.assertCountEqual(tag.forms, ["Superman"])
+        self.assertCountEqual(tag.shapes, ["Superman"])
         self.assertSequenceEqual(list(tag.messages), [flow[0], flow[2]])
         with self.assertRaises(StopIteration):
             next(digest)
@@ -55,7 +55,7 @@ class TestDigester(unittest.TestCase):
         digest = digester.digest(2)
         tag = next(digest)
         self.assertEqual(tag.id, "ironmaiden")
-        self.assertCountEqual(tag.forms, ["IronMaiden"])
+        self.assertCountEqual(tag.shapes, ["IronMaiden"])
         self.assertSequenceEqual(tag.messages, [flow[3], flow[5]])
         with self.assertRaises(StopIteration):
             next(digest)
@@ -63,7 +63,7 @@ class TestDigester(unittest.TestCase):
         digest = digester.digest(3)
         tag = next(digest)
         self.assertEqual(tag.id, "kenny")
-        self.assertCountEqual(tag.forms, ["Kenny"])
+        self.assertCountEqual(tag.shapes, ["Kenny"])
         self.assertSequenceEqual(tag.messages, [flow[4], flow[6]])
         with self.assertRaises(StopIteration):
             next(digest)

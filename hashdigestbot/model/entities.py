@@ -19,7 +19,7 @@ class HashTag(Base):
     __tablename__ = 'tags'
 
     id = PrimaryKey(String)
-    forms = Required(ShallowSet)
+    shapes = Required(ShallowSet)
 
     messages = relationship("HashMessage", back_populates="tag")
 

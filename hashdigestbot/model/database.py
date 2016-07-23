@@ -26,14 +26,14 @@ class Database:
                 tag_id = self.generate_tag_id(tag_or_name)
                 q = session.query(HashTag).filter_by(id=tag_id)
                 if not self._exists(q):
-                    tag = HashTag(id=tag_id, forms={tag_or_name})
-                # Or fetch tag and add a possible new form
+                    tag = HashTag(id=tag_id, shapes={tag_or_name})
+                # Or fetch tag and add a possible new shape
                 else:
                     tag = q.one()
-                    tag.forms.add(tag_or_name)
+                    tag.shapes.add(tag_or_name)
 
             # When we have a HashTag instance, means it came from database.
-            # Only alias is made. No tag forms is added here.
+            # Only alias is made. No tag shapes is added here.
             else:
                 tag = tag_or_name
 
