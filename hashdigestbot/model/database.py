@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Sequence
+from typing import Sequence, Union
 
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
@@ -61,21 +61,26 @@ class Database:
     def is_connected(self):
         return bool(self.session)
 
-    def add_message(self, message: HashMessage, tag_name: str, is_variations=True):
+    def add_message(self, message: HashMessage, tag_or_name: Union[str, HashTag], is_variations=True):
         session = self.session
         with session.begin():
-            # Add a tag entry if necessary
-            tag_id = self.generate_tag_id(tag_name)
-            q = session.query(HashTag).filter_by(id=tag_id)
-            if not self._exists(q):
-                tag = HashTag(id=tag_id, forms={tag_name})
+            if isinstance(tag_or_name, str):
+                # Add a tag entry if necessary
+                tag_id = self.generate_tag_id(tag_or_name)
+                q = session.query(HashTag).filter_by(id=tag_id)
+                if not self._exists(q):
+                    tag = HashTag(id=tag_id, forms={tag_or_name})
+                else:
+                    tag = q.one()
+
+            # When we have a HashTag instance, means it came from database.
             else:
-                tag = q.one()
+                tag = tag_or_name
 
             # The tag passed may not be the one extracted, but got from get_tag() method.
             # In that case the tag could not be a real variation...
             if is_variations:
-                tag.forms.add(tag_name)
+                tag.forms.add(tag_or_name)
 
             # Associate the message to this tag
             message.tag = tag
