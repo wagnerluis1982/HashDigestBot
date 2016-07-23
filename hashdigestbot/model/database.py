@@ -113,7 +113,6 @@ class Database:
 
     def __del__(self):
         self.session.close()
-        self.session.bind.dispose()
 
 
 db = Database()
