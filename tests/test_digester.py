@@ -25,13 +25,13 @@ class TestDigester(unittest.TestCase):
 
         digester = self.digester
         self.assertTrue(digester.feed(messages[0]))
-        self.assertEqual(digester.get_messages("superman"), messages[0:1])
+        self.assertEqual(digester.db.get_messages("superman"), messages[0:1])
 
         self.assertFalse(digester.feed(messages[1]))
-        self.assertEqual(digester.get_messages("superman"), messages[0:1])
+        self.assertEqual(digester.db.get_messages("superman"), messages[0:1])
 
         self.assertTrue(digester.feed(messages[2]))
-        self.assertEqual(digester.get_messages("superman"), (messages[0], messages[2]))
+        self.assertEqual(digester.db.get_messages("superman"), (messages[0], messages[2]))
 
     def test_digest(self):
         digester = self.digester
