@@ -83,12 +83,12 @@ class Database:
             # Add message to the database
             session.add(message)
 
-    def get_tag(self, message_id: int = None) -> str:
+    def get_tag(self, message_id: int) -> HashTag:
         """Tag related to a message"""
         tag = self.session.query(HashTag).\
             join(HashMessage).\
             filter_by(id=message_id).one()
-        return tag.id
+        return tag
 
     def get_messages(self, tag_id: str) -> Sequence[HashMessage]:
         """Sequence of messages related to a tag"""

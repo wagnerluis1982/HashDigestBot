@@ -48,9 +48,9 @@ class Digester:
         # Otherwise, check if message is a reply to a previous tagged message.
         # In that case, we mark them, but asking for don't register variations.
         elif message.reply_to:
-            tag = self.db.get_tag(message.reply_to)
-            if tag:
-                self.db.add_message(message, tag, is_variations=False)
+            tag_obj = self.db.get_tag(message.reply_to)
+            if tag_obj:
+                self.db.add_message(message, tag_obj.id, is_variations=False)
                 return True
         return False
 
