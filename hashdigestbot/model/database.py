@@ -5,7 +5,7 @@ from sqlalchemy import create_engine, Table, Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
-from .customtypes import SetType
+from .customtypes import ShallowSet
 
 # Interesting aliases
 PrimaryKey = partial(Column, primary_key=True)
@@ -26,7 +26,7 @@ class HashTag(Base):
     __tablename__ = 'tags'
 
     id = PrimaryKey(String)
-    forms = Required(SetType)
+    forms = Required(ShallowSet)
 
     messages = relationship("HashMessage", secondary=tags2messages,
                             back_populates="tags")
@@ -78,7 +78,7 @@ class Database:
                 tag_id = self.generate_tag_id(name)
                 q = session.query(HashTag).filter_by(id=tag_id)
                 if not self._exists(q):
-                    tag = HashTag(id=tag_id, forms=frozenset(tag_names))
+                    tag = HashTag(id=tag_id, forms=set(tag_names))
                 else:
                     tag = q.one()
 
