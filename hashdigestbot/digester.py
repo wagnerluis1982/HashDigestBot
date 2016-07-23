@@ -3,7 +3,8 @@ from typing import Iterator, Union
 
 import telegram
 
-from .model.database import connect, HashMessage, HashTag
+from .model.database import connect
+from .model.entities import HashTag, HashMessage
 
 HASHTAG_RE = re.compile(
     r"(?:^|\W+)"    # Ignore begin or non-words before '#'.

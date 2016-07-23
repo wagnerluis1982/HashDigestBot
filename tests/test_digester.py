@@ -1,6 +1,7 @@
 import unittest
 
-from hashdigestbot.digester import extract_hashtag, HashMessage, Digester
+from hashdigestbot.digester import extract_hashtag, Digester
+from hashdigestbot.model.entities import HashMessage
 from hashdigestbot.model.database import Base
 
 
