@@ -1,10 +1,19 @@
 import unittest
 
 from hashdigestbot.digester import hashtags, HashMessage, Digester
+from hashdigestbot.model.database import Base
 
 
 class TestDigester(unittest.TestCase):
-    flow = (
+    def setUp(self):
+        self.digester = Digester()
+        Base.metadata.create_all()
+
+    def tearDown(self):
+        Base.metadata.drop_all()
+
+    # set the flow as a lambda because SQLAlchemy keeps track of instances
+    flow = lambda: (
         # These messages should be fed?
         HashMessage(1938, "Did you see #Superman?", 1),     # yes: message with hashtag
         HashMessage(1939, "I am an useless message", 1),    # no: without HT or a reply
@@ -12,9 +21,9 @@ class TestDigester(unittest.TestCase):
     )
 
     def test_feed(self):
-        messages = self.flow
+        messages = self.__class__.flow()
 
-        digester = Digester()
+        digester = self.digester
         self.assertTrue(digester.feed(messages[0]))
         self.assertEqual(digester.get_messages("superman"), messages[0:1])
 
@@ -25,8 +34,8 @@ class TestDigester(unittest.TestCase):
         self.assertEqual(digester.get_messages("superman"), (messages[0], messages[2]))
 
     def test_digest(self):
-        digester = Digester()
-        flow = self.flow
+        digester = self.digester
+        flow = self.__class__.flow()
         for msg in flow:
             digester.feed(msg)
 
