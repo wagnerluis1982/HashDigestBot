@@ -3,7 +3,7 @@ from typing import Sequence, Tuple, FrozenSet, Iterator, Union
 
 import telegram
 
-from .model.database import connect, HashMessage
+from .model.database import connect, HashMessage, HashTag
 
 HASHTAG_RE = re.compile(
     r"(?:^|\W+)"    # Ignore begin or non-words before '#'.
@@ -53,11 +53,11 @@ class Digester:
                 return True
         return False
 
-    def digest(self, chat_id: int) -> Iterator[Tuple[str, Sequence[str], Sequence[HashMessage]]]:
+    def digest(self, chat_id: int) -> Iterator[HashTag]:
         """The digest
 
         Returns:
             A generator over the digest giving tuples as ``(tag, forms, messages)``
         """
         for tag in self.db.get_chat_tags(chat_id):
-            yield tag.id, tuple(tag.forms), tuple(tag.messages)
+            yield tag
