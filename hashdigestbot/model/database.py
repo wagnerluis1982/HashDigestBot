@@ -92,13 +92,15 @@ class Database:
 
     def get_messages(self, tag_id: str) -> Sequence[HashMessage]:
         """Sequence of messages related to a tag"""
-        tag = self.session.query(HashTag).\
-            filter_by(id=tag_id).one()
-        return tuple(tag.messages)
+        messages = self.session.query(HashMessage).\
+            filter_by(tag_id=tag_id)
+        return tuple(messages)
 
     def get_chat_tags(self, chat_id):
-        return self.session.query(HashTag).\
-            filter(HashTag.messages.any(HashMessage.chat_id == chat_id))
+        tags = self.session.query(HashTag).\
+            join(HashMessage).\
+            filter_by(chat_id=chat_id)
+        return tags
 
     def _exists(self, q):
         return self.session.query(q.exists()).scalar()
