@@ -100,8 +100,9 @@ class Database:
         tag = self.session.query(HashTag).filter_by(id=tag_id).one()
         return tuple(tag.messages)
 
-    def get_all_tags(self):
-        return self.session.query(HashTag)
+    def get_chat_tags(self, chat_id):
+        return self.session.query(HashTag).\
+            filter(HashTag.messages.any(HashMessage.chat_id == chat_id))
 
     def _exists(self, q):
         return self.session.query(q.exists()).scalar()

@@ -53,11 +53,11 @@ class Digester:
                 return True
         return False
 
-    def digest(self) -> Iterator[Tuple[str, Sequence[str], Sequence[HashMessage]]]:
+    def digest(self, chat_id: int) -> Iterator[Tuple[str, Sequence[str], Sequence[HashMessage]]]:
         """The digest
 
         Returns:
             A generator over the digest giving tuples as ``(tag, forms, messages)``
         """
-        for tag in self.db.get_all_tags():
+        for tag in self.db.get_chat_tags(chat_id):
             yield tag.id, tuple(tag.forms), tuple(tag.messages)

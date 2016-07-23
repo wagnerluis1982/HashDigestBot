@@ -18,6 +18,10 @@ class TestDigester(unittest.TestCase):
         HashMessage(1938, "Did you see #Superman?", 1),     # yes: message with hashtag
         HashMessage(1939, "I am an useless message", 1),    # no: without HT or a reply
         HashMessage(1940, "Yes, I saw", 1, reply_to=1938),  # yes: replying a message with HT
+        HashMessage(1941, "#IronMaiden rules", 2),          # yes
+        HashMessage(1942, "Oh my, they killed #Kenny", 3),  # yes
+        HashMessage(1943, "Yeahhhh!!!", 2, reply_to=1941),  # yes
+        HashMessage(1944, "Bastards!", 3, reply_to=1942),   # yes
     )
 
     def test_feed(self):
@@ -39,11 +43,23 @@ class TestDigester(unittest.TestCase):
         for msg in flow:
             digester.feed(msg)
 
-        digest = digester.digest()
+        digest = digester.digest(1)
         tag, forms, messages = next(digest)
         self.assertEqual(tag, "superman")
         self.assertCountEqual(forms, ["Superman"])
         self.assertSequenceEqual(messages, [flow[0], flow[2]])
+
+        digest = digester.digest(2)
+        tag, forms, messages = next(digest)
+        self.assertEqual(tag, "ironmaiden")
+        self.assertCountEqual(forms, ["IronMaiden"])
+        self.assertSequenceEqual(messages, [flow[3], flow[5]])
+
+        digest = digester.digest(3)
+        tag, forms, messages = next(digest)
+        self.assertEqual(tag, "kenny")
+        self.assertCountEqual(forms, ["Kenny"])
+        self.assertSequenceEqual(messages, [flow[4], flow[6]])
 
         with self.assertRaises(StopIteration):
             next(digest)
