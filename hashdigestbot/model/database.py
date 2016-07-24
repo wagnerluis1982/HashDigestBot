@@ -3,7 +3,7 @@ from typing import Sequence, Union
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from .entities import Base, HashTag, HashMessage
+from .entities import Base, HashTag, HashMessage, HashUser
 
 
 class Database:
@@ -47,6 +47,11 @@ class Database:
             join(HashMessage).\
             filter_by(id=message_id).one()
         return tag
+
+    def get_user(self, user_id: int) -> HashUser:
+        user = self.session.query(HashUser).\
+            filter_by(id=user_id).first()
+        return user
 
     def get_messages(self, tag_id: str) -> Sequence[HashMessage]:
         """Sequence of messages related to a tag"""

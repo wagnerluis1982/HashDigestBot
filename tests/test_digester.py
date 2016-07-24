@@ -1,13 +1,41 @@
 import unittest
 
+import telegram
+
 from hashdigestbot.digester import extract_hashtag, Digester
-from hashdigestbot.model.entities import HashMessage
 from hashdigestbot.model.database import Base
 
 
+# A helper class made on top of `telegram.Message`
+class MockMessage(telegram.Message):
+    def __init__(self, id, text, chat_id, reply_id=None):
+        from_user = telegram.User(
+            id=1, first_name="He", last_name="Man", username="heman")
+        reply_to_user = telegram.User(
+            id=2, first_name="She", last_name="Ra", username="shera")
+        chat = telegram.Chat(id=chat_id, type="group")
+        reply_to_message = reply_id and telegram.Message(reply_id, reply_to_user, None, chat)
+        super().__init__(
+            message_id=id,
+            text=text,
+            chat=chat,
+            from_user=from_user,
+            reply_to_message=reply_to_message,
+            date=None,
+        )
+
+    def __eq__(self, other):
+        return (self.message_id == other.id and
+                self.text == other.text and
+                self.chat.id == other.chat_id and
+                self.from_user.id == other.user_id and
+                (self.reply_to_message and self.reply_to_message.message_id) == other.reply_to)
+
+
 class TestDigester(unittest.TestCase):
+    digester = Digester()
+
     def setUp(self):
-        self.digester = Digester()
         Base.metadata.create_all()
 
     def tearDown(self):
@@ -16,13 +44,13 @@ class TestDigester(unittest.TestCase):
     # set the flow as a lambda because SQLAlchemy keeps track of instances
     flow = lambda: (
         # These messages should be fed?
-        HashMessage(1938, "Did you see #Superman?", 1),     # yes: message with hashtag
-        HashMessage(1939, "I am an useless message", 1),    # no: without HT or a reply
-        HashMessage(1940, "Yes, I saw", 1, reply_to=1938),  # yes: replying a message with HT
-        HashMessage(1941, "#IronMaiden rules", 2),          # yes
-        HashMessage(1942, "Oh my, they killed #Kenny", 3),  # yes
-        HashMessage(1943, "Yeahhhh!!!", 2, reply_to=1941),  # yes
-        HashMessage(1944, "Bastards!", 3, reply_to=1942),   # yes
+        MockMessage(1938, "Did you see #Superman?", 1),     # yes: message with hashtag
+        MockMessage(1939, "I am an useless message", 1),    # no: without HT or a reply
+        MockMessage(1940, "Yes, I saw", 1, reply_id=1938),  # yes: replying a message with HT
+        MockMessage(1941, "#IronMaiden rules", 2),          # yes
+        MockMessage(1942, "Oh my, they killed #Kenny", 3),  # yes
+        MockMessage(1943, "Yeahhhh!!!", 2, reply_id=1941),  # yes
+        MockMessage(1944, "Bastards!", 3, reply_id=1942),   # yes
     )
 
     def test_feed(self):
