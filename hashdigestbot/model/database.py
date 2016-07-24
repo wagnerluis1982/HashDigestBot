@@ -1,4 +1,4 @@
-from typing import Union, Iterable
+from typing import Iterable
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -17,29 +17,6 @@ class Database:
 
     def is_connected(self):
         return bool(self.session)
-
-    def add_message(self, message: HashMessage, tag_or_name: Union[str, HashTag]):
-        session = self.session
-        with session.begin():
-            if isinstance(tag_or_name, str):
-                # Add a tag entry if necessary
-                tag_id = self.generate_tag_id(tag_or_name)
-                q = session.query(HashTag).filter_by(id=tag_id)
-                if not self._exists(q):
-                    tag = HashTag(id=tag_id, shapes={tag_or_name})
-                # Or fetch tag and add a possible new shape
-                else:
-                    tag = q.one()
-                    tag.shapes.add(tag_or_name)
-
-            # When we have a HashTag instance, means it came from database.
-            # Only alias is made. No tag shapes is added here.
-            else:
-                tag = tag_or_name
-
-            # Add the message associated to the tag
-            message.tag = tag
-            session.add(message)
 
     def get_tag(self, message_id: int) -> HashTag:
         """Tag related to a message"""
@@ -65,7 +42,15 @@ class Database:
             filter_by(chat_id=chat_id)
         return tags
 
-    def _exists(self, q):
+    def add(self, instance):
+        self.session.add(instance)
+
+    def get(self, entity, **kwargs):
+        q = self.session.query(entity).filter_by(**kwargs)
+        return q.scalar()
+
+    def exists(self, entity, **kwargs):
+        q = self.session.query(entity).filter_by(**kwargs)
         return self.session.query(q.exists()).scalar()
 
     @staticmethod
