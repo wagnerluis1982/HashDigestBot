@@ -1,6 +1,7 @@
 from functools import partial
 
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, ForeignKey,\
+    Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -42,6 +43,7 @@ class HashMessage(Base):
     __tablename__ = 'messages'
 
     id = PrimaryKey(Integer)
+    date = Required(DateTime)
     text = Required(String)
     chat_id = Required(Integer)
     reply_to = Optional(Integer)

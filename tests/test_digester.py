@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime
 
 import telegram
 
@@ -16,15 +17,16 @@ class MockMessage(telegram.Message):
         reply_to_message = reply_id and telegram.Message(reply_id, reply_to_user, None, chat)
         super().__init__(
             message_id=id,
+            date=datetime.now(),
             text=text,
             chat=chat,
             from_user=from_user,
             reply_to_message=reply_to_message,
-            date=None,
         )
 
     def __eq__(self, other):
         return (self.message_id == other.id and
+                self.date == other.date and
                 self.text == other.text and
                 self.chat.id == other.chat_id and
                 self.from_user.id == other.user_id and

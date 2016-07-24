@@ -68,6 +68,7 @@ class Digester:
         # Create a HashMessage from the telegram message
         hashmessage = HashMessage(
             id=message.message_id,
+            date=message.date,
             text=message.text,
             chat_id=message.chat_id,
             reply_to=reply_id,
