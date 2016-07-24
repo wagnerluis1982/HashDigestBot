@@ -73,10 +73,9 @@ class Digester:
         """The digest
 
         Returns:
-            A generator over the digest giving tuples as ``(tag, shapes, messages)``
+            A generator over the digest giving ``HashTag`` objects``
         """
-        for tag in self.db.get_chat_tags(chat_id):
-            yield tag
+        yield from self.db.get_chat_tags(chat_id)
 
     @staticmethod
     def make_friendly_name(user):

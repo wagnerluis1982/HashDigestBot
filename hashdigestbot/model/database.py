@@ -1,4 +1,4 @@
-from typing import Sequence, Union
+from typing import Union, Iterable
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -53,13 +53,13 @@ class Database:
             filter_by(id=user_id).first()
         return user
 
-    def get_messages(self, tag_id: str) -> Sequence[HashMessage]:
+    def get_messages(self, tag_id: str) -> Iterable[HashMessage]:
         """Sequence of messages related to a tag"""
         messages = self.session.query(HashMessage).\
             filter_by(tag_id=tag_id)
-        return tuple(messages)
+        return messages
 
-    def get_chat_tags(self, chat_id):
+    def get_chat_tags(self, chat_id) -> Iterable[HashTag]:
         tags = self.session.query(HashTag).\
             join(HashMessage).\
             filter_by(chat_id=chat_id)
