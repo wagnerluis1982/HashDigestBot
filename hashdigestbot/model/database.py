@@ -10,7 +10,7 @@ class Database:
     def __init__(self):
         self.session = None
 
-    def bind(self, engine):
+    def connect(self, engine):
         if self.session:
             raise RuntimeError("Database already connected")
         self.session = sessionmaker(bind=engine)(autocommit=True)
@@ -18,31 +18,26 @@ class Database:
     def is_connected(self):
         return bool(self.session)
 
-    def get_tag(self, message_id: int) -> HashTag:
+    def get_message_tag(self, message_id: int) -> HashTag:
         """Tag related to a message"""
         tag = self.session.query(HashTag).\
             join(HashMessage).\
             filter_by(id=message_id).one()
         return tag
 
-    def get_user(self, user_id: int) -> HashUser:
-        user = self.session.query(HashUser).\
-            filter_by(id=user_id).first()
-        return user
-
-    def get_messages(self, tag_id: str) -> Iterable[HashMessage]:
+    def get_messages_by_tag(self, tag_id: str) -> Iterable[HashMessage]:
         """Sequence of messages related to a tag"""
         messages = self.session.query(HashMessage).\
             filter_by(tag_id=tag_id)
         return messages
 
-    def get_chat_tags(self, chat_id) -> Iterable[HashTag]:
+    def get_tags_by_chat(self, chat_id) -> Iterable[HashTag]:
         tags = self.session.query(HashTag).\
             join(HashMessage).\
             filter_by(chat_id=chat_id)
         return tags
 
-    def add(self, instance):
+    def insert(self, instance):
         self.session.add(instance)
 
     def get(self, entity, **kwargs):
@@ -70,5 +65,5 @@ def connect(url: str, debug: bool = False) -> Database:
         engine = create_engine(url, echo=debug)
         Base.metadata.bind = engine
         Base.metadata.create_all()
-        db.bind(engine)
+        db.connect(engine)
     return db

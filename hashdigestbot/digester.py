@@ -39,7 +39,7 @@ class Digester:
             return False
 
         # Get the user who sent the message.
-        hashuser = self.db.get_user(message.from_user.id)
+        hashuser = self.db.get(HashUser, id=message.from_user.id)
         if not hashuser:
             hashuser = HashUser(
                 id=message.from_user.id,
@@ -61,7 +61,7 @@ class Digester:
         # Otherwise, the message may be a reply to a previous tagged message.
         else:
             reply_id = message.reply_to_message.message_id
-            tag = self.db.get_tag(reply_id)
+            tag = self.db.get_message_tag(reply_id)
             if not tag:
                 return False
 
@@ -76,7 +76,7 @@ class Digester:
         hashmessage.user = hashuser
 
         # Add the hashmessage to the database
-        self.db.add(hashmessage)
+        self.db.insert(hashmessage)
         return True
 
     def digest(self, chat_id: int) -> Iterator[HashTag]:
@@ -85,7 +85,7 @@ class Digester:
         Returns:
             A generator over the digest giving ``HashTag`` objects``
         """
-        yield from self.db.get_chat_tags(chat_id)
+        yield from self.db.get_tags_by_chat(chat_id)
 
     @staticmethod
     def make_friendly_name(user):
