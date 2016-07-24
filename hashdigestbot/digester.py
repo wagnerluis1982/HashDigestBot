@@ -20,7 +20,7 @@ def extract_hashtag(text: str) -> str:
 
 class Digester:
     def __init__(self):
-        self.db = connect("sqlite:///")
+        self.db = connect("sqlite://")
 
     def feed(self, message: telegram.Message) -> bool:
         """Give a telegram message to search for a tag

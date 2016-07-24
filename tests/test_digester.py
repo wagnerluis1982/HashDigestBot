@@ -3,7 +3,6 @@ import unittest
 import telegram
 
 from hashdigestbot.digester import extract_hashtag, Digester
-from hashdigestbot.model.database import Base
 
 
 # A helper class made on top of `telegram.Message`
@@ -33,16 +32,11 @@ class MockMessage(telegram.Message):
 
 
 class TestDigester(unittest.TestCase):
-    digester = Digester()
-
     def setUp(self):
-        Base.metadata.create_all()
-
-    def tearDown(self):
-        Base.metadata.drop_all()
+        self.digester = Digester()
 
     # set the flow as a lambda because SQLAlchemy keeps track of instances
-    flow = lambda: (
+    flow = (
         # These messages should be fed?
         MockMessage(1938, "Did you see #Superman?", 1),     # yes: message with hashtag
         MockMessage(1939, "I am an useless message", 1),    # no: without HT or a reply
@@ -54,7 +48,7 @@ class TestDigester(unittest.TestCase):
     )
 
     def test_feed(self):
-        messages = self.__class__.flow()
+        messages = self.flow
 
         digester = self.digester
         self.assertTrue(digester.feed(messages[0]))
@@ -71,7 +65,7 @@ class TestDigester(unittest.TestCase):
 
     def test_digest(self):
         digester = self.digester
-        flow = self.__class__.flow()
+        flow = self.flow
         for msg in flow:
             digester.feed(msg)
 

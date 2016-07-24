@@ -61,13 +61,9 @@ class Database:
         self.session.close()
 
 
-db = Database()
-
-
 def connect(url: str, debug: bool = False) -> Database:
-    if not db.is_connected():
-        engine = create_engine(url, echo=debug)
-        Base.metadata.bind = engine
-        Base.metadata.create_all()
-        db.connect(engine)
+    db = Database()
+    engine = create_engine(url, echo=debug)
+    Base.metadata.create_all(engine)
+    db.connect(engine)
     return db
