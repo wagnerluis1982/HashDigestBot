@@ -33,7 +33,7 @@ class MockMessage(telegram.Message):
 
 class TestDigester(unittest.TestCase):
     def setUp(self):
-        self.digester = Digester()
+        self.digester = Digester("sqlite://")
 
     # set the flow as a lambda because SQLAlchemy keeps track of instances
     flow = (
