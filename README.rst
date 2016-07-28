@@ -16,7 +16,7 @@ Hashtag Digester Bot
 
 Telegram bot to make digests of tagged messages.
 
-* Free software: GNU General Public License v2
+* Free software: GNU General Public License v3
 * Documentation: https://hashdigestbot.readthedocs.io.
 
 
