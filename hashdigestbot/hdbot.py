@@ -18,7 +18,11 @@ class HDBot:
         dispatcher.add_handler(CommandHandler("start", self.send_welcome))
         dispatcher.add_handler(MessageHandler([Filters.text], self.filter_tags))
 
-        self.digester = digester.Digester(db_url)
+        try:
+            self.digester = digester.Digester(db_url)
+        except Exception as e:
+            self.updater.stop()
+            raise e
         self.db_url = db_url
 
     @staticmethod

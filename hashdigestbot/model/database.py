@@ -58,9 +58,6 @@ class Database:
         """Generate a key for a tag"""
         return tag.lower()
 
-    def __del__(self):
-        self.session.close()
-
 
 def connect(url: str, debug: bool = False) -> Database:
     db = Database()
