@@ -44,8 +44,10 @@ class HDBot:
 
     def start(self):
         self.updater.start_polling(clean=True)
-        LOG.info("Bot started")
-        LOG.info("Using database '%s'" % self.db_url)
+        LOG.info("Hashtag Digester Bot started")
+        if LOG.isEnabledFor(logging.DEBUG):
+            LOG.debug("Bot username: %s", self.updater.bot.getMe().name)
+            LOG.debug("Tags database: %s", self.db_url)
 
 
 CONTEXT_SETTINGS = dict(
