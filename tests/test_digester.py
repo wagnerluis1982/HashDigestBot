@@ -53,6 +53,8 @@ class TestDigester(unittest.TestCase):
         messages = self.flow
 
         digester = self.digester
+        digester.allow_digesting([telegram.Chat(1, "group")])
+
         self.assertTrue(digester.feed(messages[0]))
         tagged_messages = tuple(digester.db.get_messages_by_tag("superman"))
         self.assertEqual(tagged_messages, messages[0:1])
@@ -65,8 +67,17 @@ class TestDigester(unittest.TestCase):
         tagged_messages = tuple(digester.db.get_messages_by_tag("superman"))
         self.assertEqual(tagged_messages, (messages[0], messages[2]))
 
+        # no feed even having tags since chat is not allowed
+        self.assertFalse(digester.feed(messages[3]))
+
     def test_digest(self):
         digester = self.digester
+        digester.allow_digesting([
+            telegram.Chat(1, "group"),
+            telegram.Chat(2, "group"),
+            telegram.Chat(3, "group"),
+        ])
+
         flow = self.flow
         for msg in flow:
             digester.feed(msg)

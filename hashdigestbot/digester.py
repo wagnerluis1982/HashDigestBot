@@ -1,5 +1,5 @@
 import re
-from typing import Iterator
+from typing import Iterator, Iterable
 
 import telegram
 
@@ -20,6 +20,7 @@ def extract_hashtag(text: str) -> str:
 
 class Digester:
     def __init__(self, url: str, debug: bool = False):
+        self.allowed = []
         self.db = connect(url, debug)
 
     def feed(self, message: telegram.Message) -> bool:
@@ -31,6 +32,10 @@ class Digester:
         Returns:
             bool: Indicate if the message was added to the digest
         """
+        # Verify if message is allowed to digest
+        if message.chat_id not in self.allowed:
+            return False
+
         # Extract tag from the message
         text_tag = extract_hashtag(message.text)
 
@@ -87,6 +92,9 @@ class Digester:
             A generator over the digest giving ``HashTag`` objects``
         """
         yield from self.db.get_tags_by_chat(chat_id)
+
+    def allow_digesting(self, chats: Iterable[telegram.Chat]):
+        self.allowed.extend(c.id for c in chats)
 
     @staticmethod
     def make_friendly_name(user):
