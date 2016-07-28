@@ -21,7 +21,7 @@ class HDBot:
         try:
             self.digester = digester.Digester(db_url)
         except Exception as e:
-            self.updater.stop()
+            self.stop()
             raise e
         self.db_url = db_url
 
@@ -48,6 +48,9 @@ class HDBot:
         if LOG.isEnabledFor(logging.DEBUG):
             LOG.debug("Bot username: %s", self.updater.bot.getMe().name)
             LOG.debug("Tags database: %s", self.db_url)
+
+    def stop(self):
+        self.updater.stop()
 
 
 CONTEXT_SETTINGS = dict(
