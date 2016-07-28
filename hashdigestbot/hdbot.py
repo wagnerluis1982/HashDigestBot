@@ -44,7 +44,12 @@ class HDBot:
         LOG.info("Using database '%s'" % self.db_url)
 
 
-@click.command()
+CONTEXT_SETTINGS = dict(
+    auto_envvar_prefix='HDBOT',
+)
+
+
+@click.command(context_settings=CONTEXT_SETTINGS)
 @click.option('-t', '--token', required=True, help='Telegram bot token')
 @click.option('-u', '--db-url', required=True, help='Database url')
 def main(token, db_url):
@@ -64,4 +69,4 @@ def main(token, db_url):
 
 
 if __name__ == "__main__":
-    main(auto_envvar_prefix='HDBOT')
+    main()
