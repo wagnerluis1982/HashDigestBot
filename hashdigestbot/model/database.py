@@ -42,7 +42,8 @@ class Database:
         return tags
 
     def insert(self, instance):
-        self.session.add(instance)
+        with self.session.begin():
+            self.session.add(instance)
 
     def get(self, entity, **kwargs):
         q = self.query(entity).filter_by(**kwargs)
