@@ -2,6 +2,7 @@
 
 import logging
 from collections import namedtuple
+from functools import partial
 
 import click
 
@@ -21,15 +22,21 @@ options = dict(
 options = namedtuple('options', options.keys())(**options)
 
 
-@click.command(context_settings=CONTEXT_SETTINGS)
-@options.token
-@options.db_url
-@options.chat
-def main(token, db_url, chats):
+@click.group()
+def main():
     """Hashtag Digester Bot
 
     A Telegram bot to make digests of tagged messages
     """
+main.command = partial(main.command, context_settings=CONTEXT_SETTINGS)
+
+
+@main.command()
+@options.token
+@options.db_url
+@options.chat
+def start(token, db_url, chats):
+    """Initialize the bot"""
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         level=logging.INFO)
     hdbot.LOG.setLevel(logging.DEBUG)
