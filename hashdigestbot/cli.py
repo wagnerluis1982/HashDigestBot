@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+from collections import namedtuple
 
 import click
 
@@ -11,11 +12,19 @@ CONTEXT_SETTINGS = dict(
 )
 
 
+options = dict(
+    token=click.option('-t', '--token', required=True, help='Telegram bot token'),
+    db_url=click.option('-u', '--db-url', required=True, help='Database url'),
+    chat=click.option('-c', '--chat', 'chats', required=True, multiple=True, metavar='NAME',
+                      help='Allow digesting messages of a desired Telegram group in the format @groupname'),
+)
+options = namedtuple('options', options.keys())(**options)
+
+
 @click.command(context_settings=CONTEXT_SETTINGS)
-@click.option('-t', '--token', required=True, help='Telegram bot token')
-@click.option('-u', '--db-url', required=True, help='Database url')
-@click.option('-c', '--chat', 'chats', required=True, multiple=True, metavar='NAME',
-              help='Allow digesting messages of a desired Telegram group in the format @groupname')
+@options.token
+@options.db_url
+@options.chat
 def main(token, db_url, chats):
     """Hashtag Digester Bot
 
