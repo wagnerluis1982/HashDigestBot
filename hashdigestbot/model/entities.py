@@ -1,9 +1,11 @@
+import re
+from datetime import timedelta
 from functools import partial
 
 from sqlalchemy import Column, ForeignKey,\
-    Integer, String, DateTime
+    SmallInteger, Integer, String, DateTime, Interval
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
 
 from .customtypes import ShallowSet
 
@@ -57,3 +59,25 @@ class HashMessage(Base):
 
     def __repr__(self):
         return "HashMessage(%d)" % self.id
+
+
+# Useful regex patterns
+RE_EMAIL = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
+
+
+class ConfigChat(Base):
+    __tablename__ = 'config_chats'
+
+    chat_id = PrimaryKey(Integer)
+    name = Required(String)
+    sendto = Required(String)
+    interval = Optional(Interval, default=timedelta(days=1))
+    messages = Optional(SmallInteger, default=30)
+
+    @validates('sendto')
+    def validate_sendto(self, key, address):
+        assert RE_EMAIL.match(address)
+        return address
+
+    def __repr__(self):
+        return "AllowedChat(%d, %s)" % (self.chat_id, self.name)

@@ -4,7 +4,7 @@ from typing import Iterator, Iterable
 import telegram
 
 from .model.database import connect
-from .model.entities import HashTag, HashMessage, HashUser
+from .model.entities import HashTag, HashMessage, HashUser, ConfigChat
 
 HASHTAG_RE = re.compile(
     r"(?:^|\W+)"    # Ignore begin or non-words before '#'.
@@ -20,7 +20,6 @@ def extract_hashtag(text: str) -> str:
 
 class Digester:
     def __init__(self, url: str, debug: bool = False):
-        self.allowed = []
         self.db = connect(url, debug)
 
     def feed(self, message: telegram.Message) -> bool:
@@ -33,7 +32,7 @@ class Digester:
             bool: Indicate if the message was added to the digest
         """
         # Verify if message is allowed to digest
-        if message.chat_id not in self.allowed:
+        if not self.db.exists(ConfigChat, chat_id=message.chat_id):
             return False
 
         # Extract tag from the message
@@ -94,7 +93,9 @@ class Digester:
         yield from self.db.get_tags_by_chat(chat_id)
 
     def allow_digesting(self, chats: Iterable[telegram.Chat]):
-        self.allowed.extend(c.id for c in chats)
+        for c in chats:
+            allowed = ConfigChat(chat_id=c.id, name=c.username, sendto="HateSpam@HopeBe.Invalid")
+            self.db.upsert(allowed)
 
     @staticmethod
     def make_friendly_name(user):

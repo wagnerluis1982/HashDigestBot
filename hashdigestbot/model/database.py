@@ -45,6 +45,10 @@ class Database:
         with self.session.begin():
             self.session.add(instance)
 
+    def upsert(self, instance):
+        with self.session.begin():
+            self.session.merge(instance)
+
     def get(self, entity, **kwargs):
         q = self.query(entity).filter_by(**kwargs)
         return q.scalar()
