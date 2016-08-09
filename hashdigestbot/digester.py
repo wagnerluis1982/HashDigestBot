@@ -1,9 +1,9 @@
 import re
-from typing import Iterator, Iterable
+from typing import Iterator
 
 import telegram
 
-from .model.database import connect
+from .model.database import connect, Database
 from .model.entities import HashTag, HashMessage, HashUser, ConfigChat
 
 HASHTAG_RE = re.compile(
@@ -18,9 +18,20 @@ def extract_hashtag(text: str) -> str:
     return search.group(1) if search else None
 
 
+class Config:
+    def __init__(self, db):
+        assert isinstance(db, Database)
+        self.db = db
+
+    def add_chat(self, **fields):
+        allowed = ConfigChat(**fields)
+        self.db.upsert(allowed)
+
+
 class Digester:
     def __init__(self, url: str, debug: bool = False):
         self.db = connect(url, debug)
+        self.config = Config(self.db)
 
     def feed(self, message: telegram.Message) -> bool:
         """Give a telegram message to search for a tag
@@ -92,10 +103,8 @@ class Digester:
         """
         yield from self.db.get_tags_by_chat(chat_id)
 
-    def allow_digesting(self, chats: Iterable[telegram.Chat]):
-        for c in chats:
-            allowed = ConfigChat(chat_id=c.id, name=c.username, sendto="HateSpam@HopeBe.Invalid")
-            self.db.upsert(allowed)
+    def get_config(self):
+        return self.config
 
     @staticmethod
     def make_friendly_name(user):

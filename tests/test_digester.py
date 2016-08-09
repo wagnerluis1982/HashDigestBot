@@ -53,7 +53,7 @@ class TestDigester(unittest.TestCase):
         messages = self.flow
 
         digester = self.digester
-        digester.allow_digesting([telegram.Chat(1, "group")])
+        digester.get_config().add_chat(chat_id=1, name="gotham", sendto="bruce@wayne.tech")
 
         self.assertTrue(digester.feed(messages[0]))
         tagged_messages = tuple(digester.db.get_messages_by_tag("superman"))
@@ -72,11 +72,10 @@ class TestDigester(unittest.TestCase):
 
     def test_digest(self):
         digester = self.digester
-        digester.allow_digesting([
-            telegram.Chat(1, "group"),
-            telegram.Chat(2, "group"),
-            telegram.Chat(3, "group"),
-        ])
+        config = digester.get_config()
+        config.add_chat(chat_id=1, name="knight", sendto="bruce@wayne.tech")
+        config.add_chat(chat_id=2, name="island", sendto="oliver@queen.ind")
+        config.add_chat(chat_id=3, name="beetle", sendto="ted@kord.ind")
 
         flow = self.flow
         for msg in flow:

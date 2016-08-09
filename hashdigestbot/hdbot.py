@@ -35,7 +35,10 @@ class HDBot:
             except TelegramError as e:
                 self.stop()
                 raise ValueError("chat '%s' not found" % name) from e
-        self.digester.allow_digesting(chats)
+
+        config = self.digester.get_config()
+        for c in chats:
+            config.add_allowed(chat_id=c.id, name=c.username, sendto="HateSpam@HopeBe.Invalid")
 
     @staticmethod
     def send_welcome(bot, update):
