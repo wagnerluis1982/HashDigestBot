@@ -89,7 +89,7 @@ class Digester:
         """The digest
 
         Returns:
-            A generator over the digest giving ``HashTag`` objects``
+            A generator over the digest giving ``HashTag`` objects
         """
         yield from self.db.get_tags_by_chat(chat_id)
 
