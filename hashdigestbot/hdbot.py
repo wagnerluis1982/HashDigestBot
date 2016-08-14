@@ -1,6 +1,5 @@
 import logging
 
-from telegram.error import TelegramError
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 from . import digester
@@ -9,7 +8,7 @@ LOG = logging.getLogger("hdbot")
 
 
 class HDBot:
-    def __init__(self, token, db_url, chat_names=()):
+    def __init__(self, token, db_url):
         # connect to Telegram with the desired token
         self.updater = Updater(token=token)
         self.bot = self.updater.bot
@@ -27,18 +26,9 @@ class HDBot:
             raise e
         self.db_url = db_url
 
-        # set the digester to allow digesting the desired chats
-        chats = []
-        for name in chat_names:
-            try:
-                chats.append(self.bot.getChat(name))
-            except TelegramError as e:
-                self.stop()
-                raise ValueError("chat '%s' not found" % name) from e
-
-        config = self.digester.get_config()
-        for c in chats:
-            config.add_allowed(chat_id=c.id, name=c.username, sendto="HateSpam@HopeBe.Invalid")
+        # dispatcher methods
+        self.get_config = self.digester.get_config
+        self.get_chat = self.bot.getChat
 
     @staticmethod
     def send_welcome(bot, update):
@@ -66,3 +56,7 @@ class HDBot:
 
     def stop(self):
         self.updater.stop()
+
+    # suitable to be used by `contextlib.closing`
+    def close(self):
+        self.stop()

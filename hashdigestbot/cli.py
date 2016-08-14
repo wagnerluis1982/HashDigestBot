@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 import argparse
+import contextlib
 import logging
 import os
+
+from telegram import TelegramError
 
 from . import hdbot, util
 
@@ -38,17 +41,40 @@ class AppendAction(argparse._AppendAction):
 
 
 def run_command(parsed_args):
-    def start(token, db_url, chats):
+    def start(token, db_url):
         """Initialize the bot"""
         logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                             level=logging.INFO)
         hdbot.LOG.setLevel(logging.DEBUG)
         try:
-            digestbot = hdbot.HDBot(token, db_url, chats)
+            digestbot = hdbot.HDBot(token, db_url)
         except Exception as e:
             raise CLIError(e)
         else:
             digestbot.start()
+
+    def config(token, db_url, to_add, values):
+        try:
+            digestbot = hdbot.HDBot(token, db_url)
+            cfg = digestbot.get_config()
+        except Exception as e:
+            raise CLIError(e)
+
+        with contextlib.closing(digestbot):
+            if to_add == 'chat':
+                # get values
+                name = values[0]
+                email = values[1]
+                extra = dict(v.split('=') for v in values[2:])
+
+                # get chat_id
+                try:
+                    tgchat = digestbot.get_chat(name)
+                except TelegramError:
+                    raise CLIError("chat '%s' not found" % name)
+
+                # add this chat to the config database
+                cfg.add_chat(chat_id=tgchat.id, name=name[1:], sendto=email, **extra)
 
     # dispatch command
     command = parsed_args.__dict__.pop('_command_')
@@ -74,8 +100,12 @@ def main():
     subparsers = parser.add_subparsers(dest='_command_')
 
     cmd_start = subparsers.add_parser("start", parents=[common], help="Initialize the bot")
-    cmd_start.add_argument('-c', '--chat', dest='chats', required=True, action=AppendAction, sep=',',
-                           help='Allow digesting messages of a desired Telegram group in the format @groupname')
+
+    cmd_config = subparsers.add_parser("config", parents=[common], help="Configure the bot")
+    group = cmd_config.add_mutually_exclusive_group(required=True)
+    group.add_argument('--add', dest='to_add', help='Adds some new values to the option',
+                       choices=['chat'])
+    cmd_config.add_argument('values', metavar='value', nargs='*')
 
     args = parser.parse_args()
     try:
