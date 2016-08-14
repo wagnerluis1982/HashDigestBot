@@ -3,7 +3,7 @@ import argparse
 import logging
 import os
 
-from . import hdbot
+from . import hdbot, util
 
 ENVVAR_PREFIX = 'HDBOT'
 
@@ -56,6 +56,9 @@ def run_command(parsed_args):
 
 
 def main():
+    app_dir = util.get_app_dir('hashdigestbot')
+    os.makedirs(app_dir, exist_ok=True)
+
     parser = argparse.ArgumentParser(
         allow_abbrev=False,
         formatter_class=argparse.RawTextHelpFormatter,
@@ -65,7 +68,8 @@ def main():
 
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument('-t', '--token', required=True, action=StoreAction, help='Telegram bot token')
-    common.add_argument('-u', '--db-url', required=True, action=StoreAction, help='Database url')
+    common.add_argument('--db', dest='db_url', action=StoreAction, help='Database url for the digester',
+                        default='sqlite:///' + os.path.join(app_dir, 'digester.db'))
 
     subparsers = parser.add_subparsers(dest='_command_')
 
