@@ -1,51 +1,85 @@
 #!/usr/bin/env python3
-
+import argparse
 import logging
-from collections import namedtuple
-from functools import partial
-
-import click
+import os
 
 from . import hdbot
 
-CONTEXT_SETTINGS = dict(
-    auto_envvar_prefix='HDBOT',
-)
+ENVVAR_PREFIX = 'HDBOT'
 
 
-options = dict(
-    token=click.option('-t', '--token', required=True, help='Telegram bot token'),
-    db_url=click.option('-u', '--db-url', required=True, help='Database url'),
-    chat=click.option('-c', '--chat', 'chats', required=True, multiple=True, metavar='NAME',
-                      help='Allow digesting messages of a desired Telegram group in the format @groupname'),
-)
-options = namedtuple('options', options.keys())(**options)
+class CLIError(Exception):
+    pass
 
 
-@click.group()
+#
+# Adaptations to `argparse` action classes to also read the values from environment vars.
+# Since the adapted classes are private, they are likely to broke in the future.
+#
+
+class StoreAction(argparse._StoreAction):
+    def __init__(self, option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None,
+                 required=False, help=None, metavar=None):
+        evname = '%s_%s' % (ENVVAR_PREFIX, dest.upper())
+        if evname in os.environ:
+            default = os.environ[evname]
+            required = False
+        super().__init__(option_strings, dest, nargs, const, default, type, choices, required, help, metavar)
+
+
+class AppendAction(argparse._AppendAction):
+    def __init__(self, option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None,
+                 required=False, help=None, metavar=None, sep=None):
+        evname = '%s_%s' % (ENVVAR_PREFIX, dest.upper())
+        if evname in os.environ:
+            default = os.environ[evname].split(sep)
+            required = False
+        super().__init__(option_strings, dest, nargs, const, default, type, choices, required, help, metavar)
+
+
+def run_command(parsed_args):
+    def start(token, db_url, chats):
+        """Initialize the bot"""
+        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                            level=logging.INFO)
+        hdbot.LOG.setLevel(logging.DEBUG)
+        try:
+            digestbot = hdbot.HDBot(token, db_url, chats)
+        except Exception as e:
+            raise CLIError(e)
+        else:
+            digestbot.start()
+
+    # dispatch command
+    command = parsed_args.__dict__.pop('_command_')
+    locals()[command](**parsed_args.__dict__)
+
+
 def main():
-    """Hashtag Digester Bot
+    parser = argparse.ArgumentParser(
+        allow_abbrev=False,
+        formatter_class=argparse.RawTextHelpFormatter,
+        description="Hashtag Digester Bot\n\n"
+                    "A Telegram bot to make digests of tagged messages",
+    )
 
-    A Telegram bot to make digests of tagged messages
-    """
-main.command = partial(main.command, context_settings=CONTEXT_SETTINGS)
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument('-t', '--token', required=True, action=StoreAction, help='Telegram bot token')
+    common.add_argument('-u', '--db-url', required=True, action=StoreAction, help='Database url')
 
+    subparsers = parser.add_subparsers(dest='_command_')
 
-@main.command()
-@options.token
-@options.db_url
-@options.chat
-def start(token, db_url, chats):
-    """Initialize the bot"""
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        level=logging.INFO)
-    hdbot.LOG.setLevel(logging.DEBUG)
+    cmd_start = subparsers.add_parser("start", parents=[common], help="Initialize the bot")
+    cmd_start.add_argument('-c', '--chat', dest='chats', required=True, action=AppendAction, sep=',',
+                           help='Allow digesting messages of a desired Telegram group in the format @groupname')
+
+    args = parser.parse_args()
     try:
-        digestbot = hdbot.HDBot(token, db_url, chats)
-    except Exception as e:
-        raise click.UsageError(e)
-    else:
-        digestbot.start()
+        run_command(args)
+    except KeyError:
+        parser.exit(message=parser.format_help())
+    except CLIError as e:
+        parser.error(e)
 
 
 if __name__ == "__main__":
