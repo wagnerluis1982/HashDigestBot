@@ -62,10 +62,25 @@ def run_command(parsed_args):
 
         with contextlib.closing(digestbot):
             if to_add == 'chat':
+                # validation
+                if len(values) < 2:
+                    raise CLIError("Not enough arguments for -add chat")
+
                 # get values
                 name = values[0]
                 email = values[1]
-                extra = dict(v.split('=') for v in values[2:])
+                # validations
+                util.validate_username(name, exception=CLIError)
+                util.validate_email_address(email, exception=CLIError)
+
+                # get extra values if provided
+                try:
+                    extra = dict(v.split('=') for v in values[2:])
+                except ValueError:
+                    raise CLIError("Bad format in extra values for --add chat")
+
+                # ensure the format @groupname
+                name = '@'+name if name[0] != '@' else name
 
                 # get chat_id
                 try:
@@ -74,7 +89,10 @@ def run_command(parsed_args):
                     raise CLIError("chat '%s' not found" % name)
 
                 # add this chat to the config database
-                cfg.add_chat(chat_id=tgchat.id, name=name[1:], sendto=email, **extra)
+                try:
+                    cfg.add_chat(chat_id=tgchat.id, name=name[1:], sendto=email, **extra)
+                except TypeError as e:
+                    raise CLIError(e)
 
     # dispatch command
     command = parsed_args.__dict__.pop('_command_')

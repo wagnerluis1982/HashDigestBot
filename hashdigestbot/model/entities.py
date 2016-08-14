@@ -1,4 +1,3 @@
-import re
 from datetime import timedelta
 from functools import partial
 
@@ -8,6 +7,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, validates
 
 from .customtypes import ShallowSet
+from .. import util
 
 # Interesting aliases
 PrimaryKey = partial(Column, primary_key=True)
@@ -61,10 +61,6 @@ class HashMessage(Base):
         return "HashMessage(%d)" % self.id
 
 
-# Useful regex patterns
-RE_EMAIL = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
-
-
 class ConfigChat(Base):
     __tablename__ = 'config_chats'
 
@@ -76,7 +72,7 @@ class ConfigChat(Base):
 
     @validates('sendto')
     def validate_sendto(self, key, address):
-        assert RE_EMAIL.match(address)
+        util.validate_email_address(address, AssertionError)
         return address
 
     def __repr__(self):
