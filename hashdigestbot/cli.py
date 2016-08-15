@@ -107,6 +107,7 @@ class CLI:
                 # add this chat to the config database
                 try:
                     cfg.add_chat(chat_id=tgchat.id, name=name[1:], sendto=email, **extra)
+                    print("config: chat %s was added" % name)
                 except TypeError as e:
                     raise CLIError(e)
 
