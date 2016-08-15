@@ -11,33 +11,32 @@ from . import hdbot, util
 ENVVAR_PREFIX = 'HDBOT'
 
 
+# A simple specialization of `argparse.ArgumentParser` to also read the values from environment vars.
+class ArgumentParserEV(argparse.ArgumentParser):
+    def __init__(self, *args, envvar_prefix=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.from_env = envvar_prefix is not None
+        if self.from_env:
+            self.envvar_prefix = envvar_prefix+'_' if envvar_prefix else ''
+
+    def add_argument(self, *args, from_env=None, **kwargs):
+        # when adding help option, this object hasn't 'from_env' attribute yet
+        if not hasattr(self, 'from_env'):
+            return super().add_argument(*args, **kwargs)
+
+        # create action and change it if needed
+        action = super().add_argument(*args, **kwargs)
+        from_env = self.from_env if from_env is None else from_env
+        if from_env:
+            envname = '%s%s' % (self.envvar_prefix, action.dest.upper())
+            if envname in os.environ:
+                action.default = os.environ[envname]
+                action.required = False
+        return action
+
+
 class CLIError(Exception):
     pass
-
-
-#
-# Adaptations to `argparse` action classes to also read the values from environment vars.
-# Since the adapted classes are private, they are likely to broke in the future.
-#
-
-class StoreAction(argparse._StoreAction):
-    def __init__(self, option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None,
-                 required=False, help=None, metavar=None):
-        evname = '%s_%s' % (ENVVAR_PREFIX, dest.upper())
-        if evname in os.environ:
-            default = os.environ[evname]
-            required = False
-        super().__init__(option_strings, dest, nargs, const, default, type, choices, required, help, metavar)
-
-
-class AppendAction(argparse._AppendAction):
-    def __init__(self, option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None,
-                 required=False, help=None, metavar=None, sep=None):
-        evname = '%s_%s' % (ENVVAR_PREFIX, dest.upper())
-        if evname in os.environ:
-            default = os.environ[evname].split(sep)
-            required = False
-        super().__init__(option_strings, dest, nargs, const, default, type, choices, required, help, metavar)
 
 
 def run_command(parsed_args):
@@ -103,16 +102,16 @@ def main():
     app_dir = util.get_app_dir('hashdigestbot')
     os.makedirs(app_dir, exist_ok=True)
 
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParserEV(
         allow_abbrev=False,
         formatter_class=argparse.RawTextHelpFormatter,
         description="Hashtag Digester Bot\n\n"
                     "A Telegram bot to make digests of tagged messages",
     )
 
-    common = argparse.ArgumentParser(add_help=False)
-    common.add_argument('-t', '--token', required=True, action=StoreAction, help='Telegram bot token')
-    common.add_argument('--db', dest='db_url', action=StoreAction, help='Database url for the digester',
+    common = ArgumentParserEV(add_help=False, envvar_prefix=ENVVAR_PREFIX)
+    common.add_argument('-t', '--token', required=True, help='Telegram bot token')
+    common.add_argument('--db', dest='db_url', help='Database url for the digester',
                         default='sqlite:///' + os.path.join(app_dir, 'digester.db'))
 
     subparsers = parser.add_subparsers(dest='_command_')
