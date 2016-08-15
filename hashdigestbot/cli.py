@@ -35,6 +35,21 @@ class ArgumentParserEV(argparse.ArgumentParser):
         return action
 
 
+class OptionValuesAction(argparse.Action):
+    def __init__(self, option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None,
+                 required=False, help=None, metavar=None):
+        if not option_strings:
+            raise ValueError('at least one option argument must be supplied')
+        if nargs == 0:
+            raise ValueError('nargs for option-values actions must be > 0')
+        if const is not None and nargs != argparse.OPTIONAL:
+            raise ValueError('nargs must be %r to supply const' % argparse.OPTIONAL)
+        super().__init__(option_strings, dest, nargs, const, default, type, choices, required, help, metavar)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, (option_string, values))
+
+
 class CLIError(Exception):
     pass
 
@@ -54,7 +69,9 @@ class CLI:
             digestbot.start()
 
     @staticmethod
-    def config(token, db_url, to_add, values):
+    def config(token, db_url, op_name, values):
+        operation, name = op_name
+
         try:
             digestbot = hdbot.HDBot(token, db_url)
             cfg = digestbot.get_config()
@@ -62,7 +79,7 @@ class CLI:
             raise CLIError(e)
 
         with contextlib.closing(digestbot):
-            if to_add == 'chat':
+            if operation == '--add' and name == 'chat':
                 # validation
                 if len(values) < 2:
                     raise CLIError("Not enough arguments for --add chat")
@@ -124,8 +141,8 @@ def main():
 
     cmd_config = subparsers.add_parser("config", parents=[common], help="Configure the bot")
     group = cmd_config.add_mutually_exclusive_group(required=True)
-    group.add_argument('--add', dest='to_add', help='Adds some new values to the option',
-                       choices=['chat'])
+    group.add_argument('--add', dest='op_name', help='Adds some new values to the option',
+                       choices=['chat'], action=OptionValuesAction)
     cmd_config.add_argument('values', metavar='value', nargs='*')
 
     args = parser.parse_args()
