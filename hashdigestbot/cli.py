@@ -64,7 +64,7 @@ def run_command(parsed_args):
             if to_add == 'chat':
                 # validation
                 if len(values) < 2:
-                    raise CLIError("Not enough arguments for -add chat")
+                    raise CLIError("Not enough arguments for --add chat")
 
                 # get values
                 name = values[0]
