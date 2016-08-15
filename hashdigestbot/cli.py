@@ -39,7 +39,8 @@ class CLIError(Exception):
     pass
 
 
-def run_command(parsed_args):
+class CLI:
+    @staticmethod
     def start(token, db_url):
         """Initialize the bot"""
         logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -52,6 +53,7 @@ def run_command(parsed_args):
         else:
             digestbot.start()
 
+    @staticmethod
     def config(token, db_url, to_add, values):
         try:
             digestbot = hdbot.HDBot(token, db_url)
@@ -93,9 +95,11 @@ def run_command(parsed_args):
                 except TypeError as e:
                     raise CLIError(e)
 
-    # dispatch command
-    command = parsed_args.__dict__.pop('_command_')
-    locals()[command](**parsed_args.__dict__)
+    @classmethod
+    def __run__(cls, parsed_args):
+        # dispatch a command
+        command = parsed_args.__dict__.pop('_command_')
+        getattr(cls, command)(**parsed_args.__dict__)
 
 
 def main():
@@ -126,7 +130,7 @@ def main():
 
     args = parser.parse_args()
     try:
-        run_command(args)
+        CLI.__run__(args)
     except KeyError:
         parser.exit(message=parser.format_help())
     except CLIError as e:
