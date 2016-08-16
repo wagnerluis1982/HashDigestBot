@@ -58,9 +58,6 @@ class CLI:
     @staticmethod
     def start(token, db_url):
         """Initialize the bot"""
-        logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                            level=logging.INFO)
-        hdbot.LOG.setLevel(logging.DEBUG)
         try:
             digestbot = hdbot.HDBot(token, db_url)
         except Exception as e:
@@ -75,6 +72,7 @@ class CLI:
         try:
             digestbot = hdbot.HDBot(token, db_url)
             cfg = digestbot.get_config()
+            logging.info("Using configuration at %s", db_url)
         except Exception as e:
             raise CLIError(e)
 
@@ -144,6 +142,11 @@ def main():
     group.add_argument('--add', dest='op_name', help='Adds some new values to the option',
                        choices=['chat'], action=OptionValuesAction)
     cmd_config.add_argument('values', metavar='value', nargs='*')
+
+    # Logging configuration
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                        level=logging.INFO)
+    hdbot.LOG.setLevel(logging.DEBUG)
 
     args = parser.parse_args()
     try:
