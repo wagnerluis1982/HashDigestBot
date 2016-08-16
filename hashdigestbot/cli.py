@@ -50,6 +50,19 @@ class OptionValuesAction(argparse.Action):
         setattr(namespace, self.dest, (option_string, values))
 
 
+def confirm(question, default=False):
+    question += (default and ' [Yn] ' or ' [yN] ')
+    while True:
+        answer = input(question).lower()
+        if answer == '':
+            return default
+        if answer == 'y':
+            return True
+        if answer == 'n':
+            return False
+        print("Please type 'y' or 'n'")
+
+
 class CLIError(Exception):
     pass
 
@@ -106,8 +119,16 @@ class CLI:
 
                 # add this chat to the config database
                 try:
+                    if cfg.has_chat(tgchat.id):
+                        if confirm("Chat %s already in config, you are about to update it.\n"
+                                   "Do you want to continue?" % name, default=True):
+                            whatdone = 'updated'
+                        else:
+                            raise CLIError("Configuration aborted by user")
+                    else:
+                        whatdone = 'added'
                     cfg.add_chat(chat_id=tgchat.id, name=name[1:], sendto=email, **extra)
-                    print("config: chat %s was added" % name)
+                    print("config: chat %s was %s" % (name, whatdone))
                 except TypeError as e:
                     raise CLIError(e)
 

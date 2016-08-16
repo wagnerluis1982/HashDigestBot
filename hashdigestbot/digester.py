@@ -23,6 +23,9 @@ class Config:
         assert isinstance(db, Database)
         self.db = db
 
+    def has_chat(self, chat_id):
+        return self.db.exists(ConfigChat, chat_id=chat_id)
+
     def add_chat(self, **fields):
         allowed = ConfigChat(**fields)
         self.db.upsert(allowed)
